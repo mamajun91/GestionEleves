@@ -21,5 +21,5 @@ public interface ClassGroupRepository extends JpaRepository<ClassGroup, Long> {
     // the classGroup where a Student is registered for a given schoolYear
     // public Optional<ClassGroup> findByStudentIdAndSchoolYear(Long id, String schoolYear);
     
-
+    
 }

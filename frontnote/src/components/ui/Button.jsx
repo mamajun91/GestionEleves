@@ -5,7 +5,7 @@ import React from 'react';
  * @param {Object} props
  * @param {React.ReactNode} props.children - Contenu du bouton
  * @param {Function} props.onClick - Fonction appelée au clic
- * @param {'primary' | 'success' | 'danger'} props.variant - Variante de couleur (défaut: 'primary')
+ * @param {'primary' | 'success' | 'danger' | 'purple'} props.variant - Variante de couleur (défaut: 'primary')
  * @param {string} props.size - Taille ('sm' | 'md' | 'lg') (défaut: 'lg')
  * @param {boolean} props.disabled - Bouton désactivé (défaut: false)
  */
@@ -31,6 +31,11 @@ function Button({
       bg: '#dc2626',
       bgHover: '#b91c1c',
       bgActive: '#991b1b'
+    },
+    purple: {
+      bg: '#9333ea',
+      bgHover: '#7e22ce',
+      bgActive: '#6b21a8'
     }
   };
 

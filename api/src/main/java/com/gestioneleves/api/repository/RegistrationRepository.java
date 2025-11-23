@@ -27,5 +27,18 @@ public interface RegistrationRepository extends JpaRepository<Registration, Regi
     public List<Registration> findAllByOrderBySchoolYearAsc();
 
     // public List<Registration> saveAll(List<Registration> registrations);
-  
+
+
+    List<Registration> findByClassGroupId(Long classGroupId);
+    
+    
+    
+    Optional<Registration> findByStudentIdAndClassGroupId(
+        Long studentId, Long classGroupId
+    );
+    
+    boolean existsByStudentIdAndClassGroupId(
+        Long studentId, Long classGroupId
+    );
 }
+

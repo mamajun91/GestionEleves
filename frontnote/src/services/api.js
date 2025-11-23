@@ -27,7 +27,7 @@ async function apiRequest(endpoint, options = {}) {
 
   // Utiliser le service auth pour récupérer le token
   const token = authService.getToken();
-  if (token) {
+  if (!url.includes("/login") && token)  {
     config.headers['Authorization'] = `Bearer ${token}`;
   }
 
@@ -128,13 +128,10 @@ export const classGroupAPI = {
   },
 
   /**
-   * Récupérer le nom de la classe d'un élève
+   * Récupérer la classe d'un élève (objet complet avec id et name)
    */
-  async getNameByStudent(studentId) {
-    const classGroup = await apiRequest(
-      `/registrations/student/${studentId}/class-group/full`
-    );
-    return classGroup.name;
+  getByStudent(studentId) {
+    return apiRequest(`/registrations/student/${studentId}/class-group/full`);
   },
 };
 
@@ -144,10 +141,10 @@ export const classGroupAPI = {
 export const parentAPI = {
   /**
    * Récupérer la liste des enfants d'un parent
-   * GET /parents/{guardianId}/children
+   * GET /users/{guardianId}/children
    */
   getChildren: (guardianId) => {
-    return apiRequest(`/parents/${guardianId}/children`);
+    return apiRequest(`/users/${guardianId}/children`);
   },
 
   /**
@@ -180,7 +177,7 @@ export const parentAPI = {
 // ============================================
 export const authAPI = {
   /**
-   * ⭐ LOGIN OPTIMISÉ - Sans appel /api/profil
+   *  LOGIN OPTIMISÉ - Sans appel /api/profil
    * Extrait les infos directement depuis le JWT
    */
   login: async (username, password) => {
@@ -194,15 +191,16 @@ export const authAPI = {
       // 2. Sauvegarder le token
       authService.saveToken(loginData.token);
       
-      // 3. ⭐ Extraire les infos depuis le JWT (SANS appel API)
+      // 3.  Extraire les infos depuis le JWT (SANS appel API)
       const tokenInfo = jwtService.getTokenInfo(loginData.token);
       
       if (tokenInfo) {
         const user = {
+          id: tokenInfo.id,
           username: tokenInfo.username,
           role: tokenInfo.role,
         };
-        
+
         // 4. Sauvegarder l'utilisateur
         authService.saveUser(user);
         
@@ -250,14 +248,14 @@ export const authAPI = {
   },
 
   /**
-   * ⭐ NOUVEAU - Récupérer le rôle directement depuis le JWT
+   *  NOUVEAU - Récupérer le rôle directement depuis le JWT
    */
   getCurrentRole: () => {
     return authService.getRole();
   },
 
   /**
-   * ⭐ NOUVEAU - Récupérer le username directement depuis le JWT
+   *  NOUVEAU - Récupérer le username directement depuis le JWT
    */
   getCurrentUsername: () => {
     return authService.getUsername();

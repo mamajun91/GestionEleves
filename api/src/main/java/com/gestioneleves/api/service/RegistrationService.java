@@ -40,14 +40,14 @@ private final ClassGroupMapper classGroupMapper;
         return mapper.toDto(registration);
     }
 
-    /* --------- CREATE / UPDATE --------- */
+   
     public RegistrationDTO saveRegistration(RegistrationDTO dto) {
         Registration entity = mapper.toEntity(dto, studentRepository, classGroupRepository);
         Registration saved = repository.save(entity);
         return mapper.toDto(saved);
     }
 
-    /* --------- DELETE --------- */
+ 
     public void deleteRegistration(Long studentId, Long classGroupId) {
         RegistrationPK id = new RegistrationPK(studentId, classGroupId);
         repository.deleteById(id);

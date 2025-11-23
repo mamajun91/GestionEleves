@@ -1,26 +1,29 @@
 ### CREATE ADMIN
 POST http://localhost:8081/api/register
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqZHVwb250IiwiaWF0IjoxNzYzNDYwMzkwLCJleHAiOjE3NjM0NjM5OTB9.KPEHr_DGF7GD5KQc0T_YZnUTvNq2HKuhn7s2dR-5Pdk
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInN1YiI6ImpkdXBvbnQiLCJpYXQiOjE3NjM1NDEzNTQsImV4cCI6MTc2MzU0NDk1NH0.iy2_Ger2bjB4_Xe7DvRriUtgmX0bXP6fD_uFmCCld4k
+  
 
 {
-  "firstname": "Sophie",
-  "lastname": "Martin",
-  "username": "smartin",
-  "email": "sophie.martin@school.fr",
-  "password": "Teacher123!",
-  "phoneNumber": "0600000001",
-  "postalAddress": "1 rue de l'École",
-  "role": "TEACHER",
-  "teachingsIds": [100],
-  "childrenIds": []
+  "firstname": "Olivier",
+  "lastname": "Chevalier",
+  "username": "ochevalier",
+  "email": "olivier.chevalier@school.fr",
+  "password": "Parent123!",
+  "phoneNumber": "0688776655",
+  "postalAddress": "15 Boulevard Voltaire, Lille",
+  "role": "LEGAL_GUARDIAN",
+  "teachingsIds": [],
+  "childrenIds": [83, 85]
 }
+
+
 
 ### Test méthode autorisée
 POST http://localhost:8081/api/login
 Content-Type: application/json
 
 {
-  "username": "jdupont",
-  "password": "Admin#2025"
+  "username": "ochevalier",
+  "password": "Parent123!"
 }

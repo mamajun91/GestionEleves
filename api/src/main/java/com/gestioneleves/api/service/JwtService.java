@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.gestioneleves.api.entity.AppUser;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -28,28 +30,33 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject); 
     }
 
-    // ⭐ AJOUTER CETTE MÉTHODE pour extraire le rôle
+    
     public String extractRole(String token) {
         return extractClaim(token, claims -> claims.get("role", String.class));
     }
+
+    public Long extractUserId(String token) {
+    return extractClaim(token, claims -> claims.get("id", Long.class));
+}
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    // ⭐ MODIFIER generateToken pour INCLURE le rôle
+    // je Genère le token
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         
         // Ajouter le rôle aux claims
         if (userDetails instanceof UserDetails) {
-            // Si vous utilisez les authorities de Spring Security
             String role = userDetails.getAuthorities().stream()
                     .findFirst()
                     .map(grantedAuthority -> grantedAuthority.getAuthority())
                     .orElse("USER");
             claims.put("role", role);
+            if (userDetails instanceof AppUser appUser) {
+            claims.put("id", appUser.getId());}
         }
         
         return generateToken(claims, userDetails);

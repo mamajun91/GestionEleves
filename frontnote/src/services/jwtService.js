@@ -38,6 +38,15 @@ export const jwtService = {
     return payload?.sub || null; // "sub" = subject (username)
   },
 
+
+    /**
+   * Extrait l'id utilisateur depuis le token
+   */
+  extractUserId: (token) => {
+    const payload = jwtService.decodeToken(token);
+    return payload?.id || null; 
+  },
+
   /**
    * Vérifie si le token est expiré
    */
@@ -48,13 +57,14 @@ export const jwtService = {
   },
 
   /**
-   * ⭐ Récupère toutes les infos du token (FONCTION MANQUANTE)
+   *  Récupère toutes les infos du token (FONCTION MANQUANTE)
    */
   getTokenInfo: (token) => {
     const payload = jwtService.decodeToken(token);
     if (!payload) return null;
 
     return {
+      id: payload.id,
       username: payload.sub,
       role: payload.role,
       expiresAt: new Date(payload.exp * 1000),

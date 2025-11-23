@@ -1,21 +1,35 @@
 package com.gestioneleves.api.service.mapper;
 
 import com.gestioneleves.api.dto.RegistrationDTO;
+import com.gestioneleves.api.dto.StudentInClassDTO;
 import com.gestioneleves.api.entity.*;
 import com.gestioneleves.api.repository.ClassGroupRepository;
 import com.gestioneleves.api.repository.StudentRepository;
 
 import org.mapstruct.*;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface RegistrationMapper {
 
     // ==========================
-    // ENTITY → DTO
+    // ENTITY → DTO (RegistrationDTO)
     // ==========================
     @Mapping(target = "studentId", source = "id.studentId")
     @Mapping(target = "classGroupId", source = "id.classGroupId")
     RegistrationDTO toDto(Registration entity);
+
+    List<RegistrationDTO> toDtoList(List<Registration> entities);
+
+
+    // ==========================
+    // ENTITY → StudentInClassDTO
+    // ==========================
+    @Mapping(target = ".", source = "student")
+    StudentInClassDTO toStudentInClassDTO(Registration entity);
+
+    List<StudentInClassDTO> toStudentInClassDTOList(List<Registration> entities);
 
 
     // ==========================

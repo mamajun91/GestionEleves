@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import Header from '../components/layout/Header.jsx';
 import Navigation from '../components/layout/Navigation.jsx';
 import Sidebar from '../components/layout/Sidebar.jsx';
@@ -6,7 +7,7 @@ import SearchBar from '../components/ui/SearchBar.jsx';
 import Button from '../components/ui/Button.jsx';
 import Table from '../components/ui/Table.jsx';
 import authService from '../services/auth.js';
-import { enseignementsAPI, classGroupAPI } from '../services/api.js';
+import { enseignementsAPI, classGroupAPI, parentAPI } from '../services/api.js';
 
 
 /**
@@ -15,20 +16,27 @@ import { enseignementsAPI, classGroupAPI } from '../services/api.js';
  */
 function ClassGroupPage() {
   // ============================================
+  // RÉCUPÉRATION DU PARAMÈTRE URL
+  // ============================================
+  const { studentId } = useParams();
+
+  // ============================================
   // ÉTATS
   // ============================================
-  const [selectedClass, setSelectedClass] = useState('5B');
+  const [selectedClass, setSelectedClass] = useState(null);
   const [activeTab, setActiveTab] = useState('accueil');
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // États pour les données API
   const [enseignements, setEnseignements] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+
   // Données statiques
   const [classes, setClasses] = useState([]);
   const [studentClassName, setStudentClassName] = useState("");
+  const [studentClassId, setStudentClassId] = useState(null);
+  const [studentInfo, setStudentInfo] = useState({ firstName: "", lastName: "" });
 
 
   // ============================================
@@ -55,7 +63,9 @@ function ClassGroupPage() {
   // EFFECT : Charger les enseignements au changement de classe
   // ============================================
   useEffect(() => {
-    fetchEnseignements(selectedClass);
+    if (selectedClass) {
+      fetchEnseignements(selectedClass);
+    }
   }, [selectedClass]);
 
   // ============================================
@@ -107,19 +117,35 @@ function ClassGroupPage() {
   }
 };
 
-  // Fetch le nom de la classe pour un étudiant donné
+  // Fetch le nom et l'ID de la classe pour un étudiant donné + infos étudiant
   useEffect(() => {
-  async function fetchStudentClass() {
-    try {
-      const name = await classGroupAPI.getNameByStudent(studentId);
-      setStudentClassName(name);
-    } catch (err) {
-      console.error("Erreur récupération classe élève:", err);
-    }
-  }
+    async function fetchStudentData() {
+      try {
+        // Récupérer la classe
+        const classGroup = await classGroupAPI.getByStudent(studentId);
+        setStudentClassName(classGroup.name);
+        setStudentClassId(classGroup.id);
+        setSelectedClass(classGroup.id);
 
-  if (studentId) fetchStudentClass();
-}, [studentId]);
+        // Récupérer les infos de l'étudiant via l'API parent
+        const guardianId = authService.getUser()?.id;
+        if (guardianId) {
+          const children = await parentAPI.getChildren(guardianId);
+          const currentStudent = children.find(child => child.id === parseInt(studentId));
+          if (currentStudent) {
+            setStudentInfo({
+              firstName: currentStudent.firstName,
+              lastName: currentStudent.lastName
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Erreur récupération données élève:", err);
+      }
+    }
+
+    if (studentId) fetchStudentData();
+  }, [studentId]);
 
 
   // Charger les classes au montage
@@ -225,38 +251,66 @@ function ClassGroupPage() {
       {/* Header */}
       <Header onLogout={handleLogout} />
 
-      {/* Navigation */}
-      <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
-
-      {/* Contenu principal */}
-      <div className="flex flex-1 overflow-hidden">
-        
-        {/* Sidebar */}
-        <Sidebar 
-          items={classes.map(c => c.name)}    // afficher juste le nom
-          selectedItem={selectedClass}
-          onSelect={handleClassSelect}
-        />
-
-        {/* Zone principale */}
-        <main className="flex-1 p-12 overflow-y-auto bg-gray-50">
-          
-          {/* Info classe sélectionnée */}
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">
-              Classe : <span className="text-blue-600">{selectedClass}</span>
-            </h2>
-            <p className="text-gray-600 text-lg">
-              Classe de l’élève : <strong>{studentClassName}</strong>
-            </p>
-          </div>
-
-          {/* Barre de recherche */}
-          <SearchBar 
+      {/* Navigation avec barre de recherche */}
+      <Navigation
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        searchBar={
+          <SearchBar
             value={searchTerm}
             onChange={setSearchTerm}
             placeholder="Rechercher une matière ou un professeur..."
+            compact={true}
           />
+        }
+      />
+
+      {/* Contenu principal */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+
+        {/* Barre horizontale des classes */}
+        <div className="bg-white border-b-2 border-gray-300 overflow-x-auto">
+          <div className="flex">
+            {classes.map((classItem) => (
+              <button
+                key={classItem.id}
+                onClick={() => handleClassSelect(classItem.name)}
+                className={`px-6 py-4 font-semibold text-lg whitespace-nowrap border-r border-gray-200 transition-colors ${
+                  studentClassName === classItem.name
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                {classItem.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Zone principale */}
+        <main className="flex-1 p-12 overflow-y-auto bg-gray-50">
+
+          {/* Carte étudiant centrée au-dessus */}
+          <div className="flex justify-center mb-8">
+            <div className="bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-xl p-6 shadow-lg min-w-[320px]">
+              <p className="text-sm font-semibold uppercase tracking-wide mb-2 opacity-90 text-center">
+                Élève
+              </p>
+              <h3 className="text-2xl font-bold mb-1 text-center">
+                {studentInfo.firstName} {studentInfo.lastName}
+              </h3>
+              <p className="text-blue-100 text-sm text-center">
+                Classe {studentClassName}
+              </p>
+            </div>
+          </div>
+
+          {/* Titre section */}
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold text-gray-800 text-center">
+              Enseignements de la classe <span className="text-blue-600">{studentClassName}</span>
+            </h2>
+          </div>
 
           {/* Affichage conditionnel : Loading / Error / Table */}
           {loading ? (
@@ -283,12 +337,13 @@ function ClassGroupPage() {
               </div>
             </div>
           ) : (
-            // TABLEAU DES ENSEIGNEMENTS
-            <Table 
+            // TABLEAU DES ENSEIGNEMENTS (VERSION COMPACTE)
+            <Table
               columns={tableColumns}
               data={filteredEnseignements}
               onRowClick={handleRowClick}
               emptyMessage={searchTerm ? 'Aucun résultat trouvé' : 'Aucun enseignement enregistré'}
+              compact={true}
             />
           )}
         </main>

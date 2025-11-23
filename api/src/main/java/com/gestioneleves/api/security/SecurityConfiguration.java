@@ -114,7 +114,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-CorsConfigurationSource corsConfigurationSource() {
+    CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
 
     //Autoriser React (port 5173)

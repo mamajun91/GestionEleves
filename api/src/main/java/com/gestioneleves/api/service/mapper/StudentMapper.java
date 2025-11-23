@@ -18,14 +18,12 @@ public interface StudentMapper {
 
     @Mapping(target = "schoolReportsIds", source = "schoolReports", qualifiedByName = "mapSchoolReportsToIds")
     @Mapping(target = "evaluationsIds", source = "evaluations", qualifiedByName = "mapEvaluationsToIds")
-    @Mapping(target = "guardiansIds", source = "legalGuardians", qualifiedByName = "mapGuardiansToIds")
-    @Mapping(target = "registrationsIds", source = "registrations", qualifiedByName = "mapRegistrationsToIds")
+    @Mapping(target = "legalGuardiansIds", source = "legalGuardians", qualifiedByName = "mapGuardiansToIds")
     StudentDTO toDto(Student entity);
 
     @Mapping(target = "schoolReports", source = "schoolReportsIds", qualifiedByName = "mapIdsToSchoolReports")
     @Mapping(target = "evaluations", source = "evaluationsIds", qualifiedByName = "mapIdsToEvaluations")
-    @Mapping(target = "legalGuardians", source = "guardiansIds", qualifiedByName = "mapIdsToGuardians")
-    @Mapping(target = "registrations", source = "registrationsIds", qualifiedByName = "mapIdsToRegistrations")
+    @Mapping(target = "legalGuardians", source = "legalGuardiansIds", qualifiedByName = "mapIdsToGuardians")
     Student toEntity(StudentDTO dto, @Context AppUserRepository appUserRepository);
 
 
@@ -84,25 +82,5 @@ public interface StudentMapper {
                 .filter(Objects::nonNull)
                 .map(appUserRepository::getReferenceById)
                 .collect(Collectors.toList());
-    }
-
-    @Named("mapRegistrationsToIds")
-    default List<RegistrationPK> mapRegistrationsToIds(List<Registration> registrations) {
-        return registrations == null ? null :
-            registrations.stream()
-                         .map(r -> r.getId() != null ? r.getId() : null)
-                         .collect(Collectors.toList());
-    }
-
-    @Named("mapIdsToRegistrations")
-    default List<Registration> mapIdsToRegistrations(List<RegistrationPK> ids) {
-        return ids == null ? null :
-            ids.stream()
-               .map(id -> {
-                   Registration r = new Registration();
-                   r.setId(id);
-                   return r;
-               })
-               .collect(Collectors.toList());
     }
 }

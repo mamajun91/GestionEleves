@@ -27,15 +27,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class StudentService {
 
     private final StudentRepository repository;
     private final StudentMapper mapper;
     private final SchoolReportRepository schoolReportRepository;
     private final EvaluationRepository evaluationRepository;
-    private final AppUserRepository appUserRepository;
-    private final RegistrationRepository registrationRepository;
     private final FileStorageService fileStorageService;
     private final String photoFolder = "students-photos/";
     private final String imgType = ".webp";
@@ -56,7 +53,6 @@ public class StudentService {
     }
 
     
-    @Transactional
     public StudentDTO saveOrUpdate(Long id, StudentDTO dto) {
         Student student = (id != null && repository.existsById(id))
                 ? repository.findById(id)
@@ -79,14 +75,6 @@ public class StudentService {
             student.setEvaluations(evaluations);
         }
 
-        if (dto.getGuardiansIds() != null && !dto.getGuardiansIds().isEmpty()) {
-            student.setLegalGuardians(mapper.mapIdsToGuardians(dto.getGuardiansIds(), appUserRepository));
-        }
-
-        if (dto.getRegistrationsIds() != null && !dto.getRegistrationsIds().isEmpty()) {
-            List<Registration> registrations = registrationRepository.findAllById(dto.getRegistrationsIds());
-            student.setRegistrations(registrations);
-        }
 
         Student saved = repository.save(student);
 
@@ -95,6 +83,7 @@ public class StudentService {
 
 
 
+    @Transactional(readOnly = true)
     public List<StudentDTO> getByLegalGuardian(Long id){
         return repository.findByLegalGuardiansId(id)
         .stream()

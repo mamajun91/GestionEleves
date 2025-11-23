@@ -53,12 +53,13 @@ public class Student extends Person {
     @Builder.Default
     private List<Registration> registrations = new ArrayList<>();
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "student_guardian_link",
             joinColumns = @JoinColumn(name = "child_id", nullable = false),
             inverseJoinColumns = @JoinColumn(name = "guardian_id", nullable = false)
     )
     @Builder.Default
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<AppUser> legalGuardians = new ArrayList<>();
 }

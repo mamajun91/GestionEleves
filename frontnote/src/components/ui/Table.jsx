@@ -7,34 +7,45 @@ import React from 'react';
  * @param {Array<Object>} props.data - Données du tableau
  * @param {Function} props.onRowClick - Fonction appelée lors du clic sur une ligne
  * @param {string} props.emptyMessage - Message si tableau vide (défaut: 'Aucune donnée disponible')
+ * @param {boolean} props.compact - Mode compact avec texte plus petit (défaut: false)
  */
-function Table({ 
-  columns = [], 
-  data = [], 
+function Table({
+  columns = [],
+  data = [],
   onRowClick,
-  emptyMessage = 'Aucune donnée disponible' 
+  emptyMessage = 'Aucune donnée disponible',
+  compact = false
 }) {
+  // Styles selon le mode compact ou normal
+  const headerPadding = compact ? '0.75rem 1rem' : '1.5rem 2rem';
+  const headerFontSize = compact ? '1rem' : '1.5rem';
+  const cellPadding = compact ? '0.75rem 1rem' : '1.5rem 2rem';
+  const cellFontSize = compact ? '0.95rem' : '1.125rem';
+  const emptyPadding = compact ? '2rem 1rem' : '3rem 2rem';
+  const emptyFontSize = compact ? '1rem' : '1.25rem';
+
   return (
-    <div style={{ 
-      backgroundColor: 'white', 
-      borderRadius: '1rem', 
-      boxShadow: '0 10px 25px rgba(0,0,0,0.15)', 
-      border: '2px solid #d1d5db',
-      overflow: 'hidden'
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '0.75rem',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+      border: '1px solid #d1d5db',
+      overflow: 'auto',
+      maxHeight: '70vh'
     }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         {/* En-têtes */}
         <thead>
           <tr style={{ backgroundColor: '#f3f4f6', borderBottom: '2px solid #d1d5db' }}>
             {columns.map((col) => (
-              <th 
+              <th
                 key={col.key}
-                style={{ 
-                  textAlign: 'left', 
-                  padding: '1.5rem 2rem', 
-                  fontSize: '1.5rem', 
-                  fontWeight: '700', 
-                  color: '#1f2937' 
+                style={{
+                  textAlign: 'left',
+                  padding: headerPadding,
+                  fontSize: headerFontSize,
+                  fontWeight: '700',
+                  color: '#1f2937'
                 }}
               >
                 {col.label}
@@ -42,18 +53,18 @@ function Table({
             ))}
           </tr>
         </thead>
-        
+
         {/* Corps */}
         <tbody>
           {data.length === 0 ? (
             <tr>
-              <td 
-                colSpan={columns.length} 
-                style={{ 
-                  padding: '3rem 2rem', 
-                  textAlign: 'center', 
-                  color: '#9ca3af', 
-                  fontSize: '1.25rem' 
+              <td
+                colSpan={columns.length}
+                style={{
+                  padding: emptyPadding,
+                  textAlign: 'center',
+                  color: '#9ca3af',
+                  fontSize: emptyFontSize
                 }}
               >
                 {emptyMessage}
@@ -61,9 +72,9 @@ function Table({
             </tr>
           ) : (
             data.map((row, index) => (
-              <tr 
+              <tr
                 key={row.id || index}
-                style={{ 
+                style={{
                   borderBottom: '1px solid #e5e7eb',
                   transition: 'background-color 0.2s'
                 }}
@@ -71,12 +82,12 @@ function Table({
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 {columns.map((col) => (
-                  <td 
+                  <td
                     key={col.key}
                     onClick={() => !col.render && onRowClick && onRowClick(row)}
-                    style={{ 
-                      padding: '1.5rem 2rem', 
-                      fontSize: '1.125rem', 
+                    style={{
+                      padding: cellPadding,
+                      fontSize: cellFontSize,
                       color: '#4b5563',
                       cursor: !col.render && onRowClick ? 'pointer' : 'default'
                     }}

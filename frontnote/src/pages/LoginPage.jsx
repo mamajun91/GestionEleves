@@ -20,52 +20,52 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // 1. Appel API de connexion (authAPI gère déjà tout via jwtService)
+      // 1. Appel API login
       const data = await authAPI.login(username, password);
-      
-      console.log("✅ Connexion réussie !", data);
+      console.log("Connexion réussie !", data);
 
-      // 2. ⭐ Récupérer le rôle directement depuis le JWT (plus rapide)
-      const role = authService.getRole();
+      // 2. Récupérer les infos depuis le token
+      const rawRole = authService.getRole();        
+      const cleanRole = rawRole?.replace("ROLE_", ""); 
       const currentUsername = authService.getUsername();
 
-      console.log("✅ Utilisateur:", currentUsername);
-      console.log("✅ Rôle extrait du JWT:", role);
+      console.log("Utilisateur:", currentUsername);
+      console.log("Rôle brut:", rawRole);
+      console.log("Rôle normalisé:", cleanRole);
 
-      // 3. Vérifier que le rôle a bien été extrait
-      if (!role) {
+      if (!cleanRole) {
         throw new Error("Impossible d'extraire le rôle depuis le token");
       }
 
-      // 4. ⭐ Redirection selon le rôle (utilisé directement depuis le JWT)
-      switch (role) {
+      // 3. Redirection selon le rôle
+      switch (cleanRole) {
         case "LEGAL_GUARDIAN":
-          console.log("➡️ Redirection vers /parent");
+          console.log("Redirection vers /parent");
           navigate("/parent");
           break;
-        
+
         case "TEACHER":
-          console.log("➡️ Redirection vers /classes/1");
+          console.log("Redirection vers /classes/1");
           navigate("/classes/1");
           break;
-        
+
         case "ADMIN":
-          console.log("➡️ Redirection vers /admin");
+          console.log("Redirection vers /admin");
           navigate("/admin");
           break;
-        
+
         case "STUDENT":
-          console.log("➡️ Redirection vers /student/dashboard");
+          console.log("Redirection vers /student/dashboard");
           navigate("/student/dashboard");
           break;
-        
+
         default:
-          console.warn(`⚠️ Rôle non reconnu: "${role}", redirection par défaut`);
+          console.warn(`Rôle non reconnu : "${cleanRole}", redirection par défaut`);
           navigate("/dashboard");
       }
 
     } catch (err) {
-      console.error("❌ Erreur connexion:", err);
+      console.error("Erreur connexion:", err);
       setError(err.message || "Identifiants incorrects");
     } finally {
       setLoading(false);
@@ -74,17 +74,26 @@ export default function LoginPage() {
 
   return (
     <div className="page-container">
+      {/* Header global */}
       <Header />
+
+      {/* Barre de navigation globale */}
       <Navigation />
 
+      {/* Contenu principal */}
       <div className="content-wrapper">
+        {/* Bloc centré */}
         <div className="login-center-box">
+          
+          {/* Logo */}
           <div className="logo-zone">
             <h1>FRONTNOTE</h1>
             <p>Connexion à votre compte</p>
           </div>
 
+          {/* Formulaire */}
           <form onSubmit={onSubmit} className="form-zone">
+
             <div className="field">
               <label>Nom d'utilisateur</label>
               <input
@@ -107,34 +116,34 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Afficher l'erreur si elle existe */}
+            {/* Box erreur */}
             {error && (
               <div className="error-message" style={{
-                backgroundColor: '#fee',
-                border: '2px solid #fcc',
-                padding: '12px',
-                borderRadius: '8px',
-                color: '#c33',
-                marginBottom: '16px'
+                backgroundColor: "#fee",
+                border: "2px solid #fcc",
+                padding: "12px",
+                borderRadius: "8px",
+                color: "#c33",
+                marginBottom: "16px"
               }}>
-                ⚠️ {error}
+                {error}
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="login-btn"
-            >
-              {loading ? "⏳ Connexion..." : "🔐 Se connecter"}
+            {/* Bouton de connexion */}
+            <button type="submit" disabled={loading} className="login-btn">
+              {loading ? "Connexion..." : "Se connecter"}
             </button>
           </form>
 
+          {/* Mot de passe oublié */}
           <div className="forgot-zone">
             <a href="#">Mot de passe oublié ?</a>
           </div>
+
         </div>
       </div>
     </div>
   );
 }
+

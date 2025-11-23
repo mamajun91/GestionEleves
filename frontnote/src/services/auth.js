@@ -76,7 +76,7 @@ export const removeUser = () => {
 };
 
 // ============================================
-// ⭐ EXTRACTION DEPUIS LE JWT
+//  EXTRACTION DEPUIS LE JWT
 // ============================================
 
 /**
@@ -100,6 +100,16 @@ export const getUsername = () => {
 };
 
 /**
+ *  Récupérer l'id utilisateur depuis le JWT
+ * @returns {number|null} id utilisateur
+ */
+export const getUserId = () => {
+  const token = getToken();
+  if (!token) return null;
+  return jwtService.extractUserId(token);
+};
+
+/**
  * Récupérer toutes les infos du token décodé
  * @returns {Object|null} Infos complètes du token
  */
@@ -120,8 +130,12 @@ export const getTokenInfo = () => {
  */
 export const hasRole = (requiredRole) => {
   const role = getRole();
-  return role === requiredRole;
+  if (!role) return false;
+
+  const normalizedRole = role.replace("ROLE_", "");
+  return normalizedRole === requiredRole;
 };
+
 
 /**
  * Vérifier si l'utilisateur est administrateur
@@ -145,7 +159,7 @@ export const isStudent = () => hasRole('STUDENT');
  * Vérifier si l'utilisateur est parent
  * @returns {boolean}
  */
-export const isParent = () => hasRole('PARENT');
+export const isParent = () => hasRole('LEGAL_GUARDIAN');
 
 // ============================================
 // AUTHENTIFICATION
@@ -179,7 +193,7 @@ export const logout = () => {
 /**
  * Connexion
  * @param {string} token - JWT token
- * @param {Object} user - Données utilisateur (optionnel, sera extrait du JWT si absent)
+ * @param {Object} user - Données utilisateur 
  */
 export const login = (token, user = null) => {
   saveToken(token);
@@ -201,7 +215,7 @@ export const login = (token, user = null) => {
 };
 
 // ============================================
-// ⚠️ MÉTHODES DÉPRÉCIÉES (gardées pour compatibilité)
+// MÉTHODES
 // ============================================
 
 /**
@@ -244,12 +258,13 @@ export default {
   getUser,
   removeUser,
   
-  // ⭐ Extraction JWT (NOUVEAU)
+  // Extraction JWT (NOUVEAU)
   getRole,
   getUsername,
   getTokenInfo,
+  getUserId,
   
-  // ⭐ Helpers Rôles (NOUVEAU)
+  // Helpers Rôles (NOUVEAU)
   hasRole,
   isAdmin,
   isTeacher,
