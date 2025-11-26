@@ -6,8 +6,7 @@ import Sidebar from '../components/layout/Sidebar.jsx';
 import SearchBar from '../components/ui/SearchBar.jsx';
 import Button from '../components/ui/Button.jsx';
 import Table from '../components/ui/Table.jsx';
-import authService from '../services/auth.js';
-import { enseignementsAPI, classGroupAPI, parentAPI } from '../services/api.js';
+import { useAuth, useTeachings, useClassGroup, useParent } from '../domain/hooks';
 
 
 /**
@@ -16,57 +15,42 @@ import { enseignementsAPI, classGroupAPI, parentAPI } from '../services/api.js';
  */
 function ClassGroupPage() {
   // ============================================
-  // RÉCUPÉRATION DU PARAMÈTRE URL
+  // HOOKS
   // ============================================
   const { studentId } = useParams();
+  const { logout, getCurrentUserId } = useAuth();
+  const {
+    teachings: enseignements,
+    isLoading: loadingTeachings,
+    error: teachingsError,
+    fetchByClassGroup
+  } = useTeachings();
+  const {
+    classGroups: classes,
+    currentClassGroup,
+    fetchAll: fetchAllClasses,
+    fetchByStudent
+  } = useClassGroup();
+  const { children, fetchChildren } = useParent();
 
   // ============================================
-  // ÉTATS
+  // ÉTATS LOCAUX
   // ============================================
   const [selectedClass, setSelectedClass] = useState(null);
   const [activeTab, setActiveTab] = useState('accueil');
   const [searchTerm, setSearchTerm] = useState('');
-
-  // États pour les données API
-  const [enseignements, setEnseignements] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  // Données statiques
-  const [classes, setClasses] = useState([]);
   const [studentClassName, setStudentClassName] = useState("");
-  const [studentClassId, setStudentClassId] = useState(null);
   const [studentInfo, setStudentInfo] = useState({ firstName: "", lastName: "" });
 
-
-  // ============================================
-  // FETCH ENSEIGNEMENTS avec Service API
-  // ============================================
-  const fetchEnseignements = async (classGroupId) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Utiliser le service API
-      const data = await enseignementsAPI.getByClassGroup(classGroupId);
-      setEnseignements(data);
-    } catch (err) {
-      console.error('Erreur fetch enseignements:', err);
-      setError(err.message);
-      setEnseignements([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // ============================================
   // EFFECT : Charger les enseignements au changement de classe
   // ============================================
   useEffect(() => {
     if (selectedClass) {
-      fetchEnseignements(selectedClass);
+      fetchByClassGroup(selectedClass);
     }
-  }, [selectedClass]);
+  }, [selectedClass, fetchByClassGroup]);
 
   // ============================================
   // COLONNES DU TABLEAU
@@ -104,34 +88,29 @@ function ClassGroupPage() {
     classMatch
   );
 
-// ============================================
-  // FETCH ClassGroup avec Service API
+  // ============================================
+  // EFFECT : Charger les données initiales
   // ============================================
 
-  const fetchClasses = async () => {
-  try {
-    const data = await classGroupAPI.getAll();
-    setClasses(data);
-  } catch (err) {
-    console.error("Erreur classes:", err);
-  }
-};
+  // Charger toutes les classes au montage
+  useEffect(() => {
+    fetchAllClasses();
+  }, [fetchAllClasses]);
 
   // Fetch le nom et l'ID de la classe pour un étudiant donné + infos étudiant
   useEffect(() => {
     async function fetchStudentData() {
       try {
-        // Récupérer la classe
-        const classGroup = await classGroupAPI.getByStudent(studentId);
+        // Récupérer la classe de l'étudiant
+        const classGroup = await fetchByStudent(parseInt(studentId));
         setStudentClassName(classGroup.name);
-        setStudentClassId(classGroup.id);
         setSelectedClass(classGroup.id);
 
         // Récupérer les infos de l'étudiant via l'API parent
-        const guardianId = authService.getUser()?.id;
+        const guardianId = getCurrentUserId();
         if (guardianId) {
-          const children = await parentAPI.getChildren(guardianId);
-          const currentStudent = children.find(child => child.id === parseInt(studentId));
+          const childrenData = await fetchChildren(guardianId);
+          const currentStudent = childrenData.find(child => child.id === parseInt(studentId));
           if (currentStudent) {
             setStudentInfo({
               firstName: currentStudent.firstName,
@@ -145,22 +124,16 @@ function ClassGroupPage() {
     }
 
     if (studentId) fetchStudentData();
-  }, [studentId]);
-
-
-  // Charger les classes au montage
-  useEffect(() => {
-    fetchClasses();
-  }, []);
+  }, [studentId, fetchByStudent, fetchChildren, getCurrentUserId]);
 
 
 
   // ============================================
   // HANDLERS
   // ============================================
-  
+
   const handleLogout = () => {
-    authService.logout();
+    logout();
     console.log('Déconnexion...');
     // Rediriger vers /login
     window.location.href = '/login';
@@ -172,34 +145,17 @@ function ClassGroupPage() {
   };
 
 
-    const handleClassSelect = (className) => {
+  const handleClassSelect = (className) => {
     const classObj = classes.find(c => c.name === className);
     if (classObj) {
       setSelectedClass(classObj.id);
-      fetchEnseignements(classObj.id);
+      fetchByClassGroup(classObj.id);
     }
   };
 
   const handleAjouter = async () => {
-    const nouvelEnseignement = {
-      subjectName: 'Nouvelle Matière',
-      teacherName: 'Nouveau Professeur',
-      classGroupId: selectedClass
-    };
-
-    try {
-      //Utiliser le service API
-      const data = await enseignementsAPI.create(nouvelEnseignement);
-      console.log('Enseignement ajouté:', data);
-      
-      // Recharger la liste
-      fetchEnseignements(selectedClass);
-      
-      alert('Enseignement ajouté avec succès !');
-    } catch (err) {
-      console.error('Erreur ajout:', err);
-      alert('Erreur lors de l\'ajout: ' + err.message);
-    }
+    // TODO: Implémenter l'ajout d'enseignement
+    alert('Fonctionnalité d\'ajout à implémenter');
   };
 
   const handleModifier = async () => {
@@ -208,23 +164,8 @@ function ClassGroupPage() {
   };
 
   const handleSupprimer = async (id) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet enseignement ?')) {
-      return;
-    }
-
-    try {
-      // Utiliser le service API
-      await enseignementsAPI.delete(id);
-      console.log('Enseignement supprimé');
-      
-      // Recharger la liste
-      fetchEnseignements(selectedClass);
-      
-      alert('Enseignement supprimé avec succès !');
-    } catch (err) {
-      console.error('Erreur suppression:', err);
-      alert('Erreur lors de la suppression: ' + err.message);
-    }
+    // TODO: Implémenter la suppression d'enseignement
+    alert('Fonctionnalité de suppression à implémenter');
   };
 
   const handleEvaluations = (enseignement) => {
@@ -240,7 +181,7 @@ function ClassGroupPage() {
   };
 
   const handleRetry = () => {
-    fetchEnseignements(selectedClass);
+    fetchByClassGroup(selectedClass);
   };
 
   // ============================================
@@ -313,7 +254,7 @@ function ClassGroupPage() {
           </div>
 
           {/* Affichage conditionnel : Loading / Error / Table */}
-          {loading ? (
+          {loadingTeachings ? (
             // ÉTAT DE CHARGEMENT
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
@@ -321,18 +262,15 @@ function ClassGroupPage() {
                 <p className="text-xl text-gray-600 font-semibold">Chargement des enseignements...</p>
               </div>
             </div>
-          ) : error ? (
+          ) : teachingsError ? (
             // ÉTAT D'ERREUR
             <div className="bg-red-50 border-2 border-red-300 rounded-2xl p-8 text-center">
               <div className="text-red-600 text-6xl mb-4">⚠️</div>
               <h3 className="text-2xl font-bold text-red-800 mb-2">Erreur de chargement</h3>
-              <p className="text-red-600 text-lg mb-6">{error}</p>
+              <p className="text-red-600 text-lg mb-6">{teachingsError}</p>
               <div className="flex gap-4 justify-center">
                 <Button variant="danger" size="md" onClick={handleRetry}>
                   🔄 Réessayer
-                </Button>
-                <Button variant="primary" size="md" onClick={() => setError(null)}>
-                  ✖️ Fermer
                 </Button>
               </div>
             </div>

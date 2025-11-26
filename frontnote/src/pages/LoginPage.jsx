@@ -3,72 +3,56 @@ import Header from "../components/layout/Header";
 import Navigation from "../components/layout/Navigation";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authAPI } from "../services/api";
-import authService from "../services/auth";
+import { useAuth } from "../domain/hooks";
+import { USER_ROLES } from "../core/constants";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login, isLoading, error: authError } = useAuth();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
     try {
-      // 1. Appel API login
-      const data = await authAPI.login(username, password);
-      console.log("Connexion réussie !", data);
+      // Connexion via le nouveau hook useAuth
+      const user = await login(username, password);
+      console.log("Connexion réussie !", user);
 
-      // 2. Récupérer les infos depuis le token
-      const rawRole = authService.getRole();        
-      const cleanRole = rawRole?.replace("ROLE_", ""); 
-      const currentUsername = authService.getUsername();
-
-      console.log("Utilisateur:", currentUsername);
-      console.log("Rôle brut:", rawRole);
-      console.log("Rôle normalisé:", cleanRole);
-
-      if (!cleanRole) {
-        throw new Error("Impossible d'extraire le rôle depuis le token");
-      }
-
-      // 3. Redirection selon le rôle
-      switch (cleanRole) {
-        case "LEGAL_GUARDIAN":
+      // Redirection selon le rôle
+      switch (user.role) {
+        case USER_ROLES.LEGAL_GUARDIAN:
           console.log("Redirection vers /parent");
           navigate("/parent");
           break;
 
-        case "TEACHER":
+        case USER_ROLES.TEACHER:
           console.log("Redirection vers /classes/1");
           navigate("/classes/1");
           break;
 
-        case "ADMIN":
+        case USER_ROLES.ADMIN:
           console.log("Redirection vers /admin");
           navigate("/admin");
           break;
 
-        case "STUDENT":
+        case USER_ROLES.STUDENT:
           console.log("Redirection vers /student/dashboard");
           navigate("/student/dashboard");
           break;
 
         default:
-          console.warn(`Rôle non reconnu : "${cleanRole}", redirection par défaut`);
+          console.warn(`Rôle non reconnu : "${user.role}", redirection par défaut`);
           navigate("/dashboard");
       }
 
     } catch (err) {
       console.error("Erreur connexion:", err);
-      setError(err.message || "Identifiants incorrects");
-    } finally {
-      setLoading(false);
+      setError(authError || err.message || "Identifiants incorrects");
     }
   };
 
@@ -131,8 +115,8 @@ export default function LoginPage() {
             )}
 
             {/* Bouton de connexion */}
-            <button type="submit" disabled={loading} className="login-btn">
-              {loading ? "Connexion..." : "Se connecter"}
+            <button type="submit" disabled={isLoading} className="login-btn">
+              {isLoading ? "Connexion..." : "Se connecter"}
             </button>
           </form>
 

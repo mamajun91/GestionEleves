@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import authService from "../../services/auth.js";
+import { useAuth } from "../../domain/hooks";
 
 /**
  * Route protégée :
@@ -9,16 +9,11 @@ import authService from "../../services/auth.js";
  * - redirige vers /login si nécessaire
  */
 export default function ProtectedRoute({ children }) {
-  const isAuthenticated = authService.isAuthenticated();
-  const isTokenExpired = authService.isTokenExpired();
+  const { isAuthenticated, logout } = useAuth();
 
-  // Conditions de refus
-  if (!isAuthenticated || isTokenExpired) {
-
-    if (isTokenExpired) {
-      authService.logout(); // Nettoyer le token expiré
-    }
-
+  // Vérifier l'authentification (inclut la vérification d'expiration)
+  if (!isAuthenticated()) {
+    logout(); // Nettoyer le token expiré
     return <Navigate to="/login" replace />;
   }
 

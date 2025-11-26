@@ -3,7 +3,6 @@ package com.gestioneleves.api.service;
 import com.gestioneleves.api.dto.RegistrationDTO;
 import com.gestioneleves.api.dto.SchoolReportDTO;
 import com.gestioneleves.api.dto.SchoolReportLineDTO;
-import com.gestioneleves.api.dto.TeachingDTO;
 import com.gestioneleves.api.entity.SchoolReport;
 import com.gestioneleves.api.entity.SchoolReportLinePK;
 import com.gestioneleves.api.repository.SchoolReportRepository;

@@ -2,12 +2,9 @@ package com.gestioneleves.api.service;
 
 import com.gestioneleves.api.dto.StudentDTO;
 import com.gestioneleves.api.entity.Evaluation;
-import com.gestioneleves.api.entity.Registration;
 import com.gestioneleves.api.entity.SchoolReport;
 import com.gestioneleves.api.entity.Student;
-import com.gestioneleves.api.repository.AppUserRepository;
 import com.gestioneleves.api.repository.EvaluationRepository;
-import com.gestioneleves.api.repository.RegistrationRepository;
 import com.gestioneleves.api.repository.SchoolReportRepository;
 import com.gestioneleves.api.repository.StudentRepository;
 import com.gestioneleves.api.service.mapper.StudentMapper;

@@ -1,53 +1,60 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { parentAPI } from "../../services/api";
-import authService from "../../services/auth";
+import { useAuth, useParent } from "../../domain/hooks";
 
 function AcceuilParent() {
   const navigate = useNavigate();
-  const [children, setChildren] = useState([]);
+  const { getCurrentUserId } = useAuth();
+  const { children, fetchChildren, isLoading } = useParent();
 
-  const parentId = authService.getUser()?.id;
+  const parentId = getCurrentUserId();
 
-useEffect(() => {
-  let isMounted = true;
+  useEffect(() => {
+    let isMounted = true;
 
-  async function load() {
-    try {
-      if (!parentId) {
-        console.log(" Pas de parentId");
-        return;
+    async function load() {
+      try {
+        if (!parentId) {
+          console.log("Pas de parentId");
+          return;
+        }
+
+        console.log("Appel API avec parentId:", parentId);
+        const data = await fetchChildren(parentId);
+
+        if (!isMounted) return;
+
+        console.log("Données reçues:", data);
+        console.log("Nombre d'enfants:", data?.length);
+      } catch (err) {
+        if (!isMounted) return;
+        console.error("Erreur fetch enfants:", err);
+        console.error("Stack:", err.stack);
       }
-
-      console.log(" Appel API avec parentId:", parentId);
-      const data = await parentAPI.getChildren(parentId);
-
-      if (!isMounted) return; // Ne pas mettre à jour si le composant est démonté
-
-      console.log(" Données reçues:", data);
-      console.log(" Nombre d'enfants:", data?.length);
-      setChildren(data);
-    } catch (err) {
-      if (!isMounted) return;
-      console.error(" Erreur fetch enfants:", err);
-      console.error(" Stack:", err.stack);
     }
-  }
 
-  load();
+    load();
 
-  return () => {
-    isMounted = false; // Cleanup function
-  };
-}, [parentId]);
+    return () => {
+      isMounted = false;
+    };
+  }, [parentId, fetchChildren]);
 
 
   return (
     <div className="container mx-auto p-8">
       <h1 className="text-3xl font-bold text-gray-800 mb-8">Mes Enfants</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {children.map(student => (
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-xl text-gray-600 font-semibold">Chargement...</p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {children.map(student => (
           <div
             key={student.id}
             className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 border border-gray-200"
@@ -87,10 +94,11 @@ useEffect(() => {
               </button>
             </div>
           </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
-      {children.length === 0 && (
+      {!isLoading && children.length === 0 && (
         <div className="text-center text-gray-500 mt-12">
           <p className="text-xl">Aucun enfant enregistré</p>
         </div>
